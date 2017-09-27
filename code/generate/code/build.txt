@@ -1,0 +1,127 @@
+Build Instructions - by Willow Schlanger. Released to the Public Domain in August of 2017.
+
+Demonstrates a "fully linear" implementation of SHA2-256, but in an iterative (i.e. using row-at-a-time, or almost interactive
+process based on a new information theory concept called 'delta states', instead of the usual all-at-once method of using
+matrix multiplication; note that, although a matrix of coefficients is being used to fully represent SHA2-256, a case can be
+made with the power-of-two modulo employed and the computation rule itself, that this is only 'fully linear' from a certain
+point of view, but it is definitely an interesting achievement from a theoretical point of view!)
+
+Short Version
+
+Just build compute1.cpp and run the resulting binary, if you want to try out this program.
+
+In Linux, this would be done as follows:
+
+g++ -o compute1.out compute1.cpp
+./compute.out
+
+The Long Version, below, will walk you through more details and requires GMP as well as a compiler that supports C++11 mode
+(because the author has shipped this file with an already-produced sha2_256_out.txt data file, these extra steps are
+unncessary; in fact, 'compute1' itself and its required input file, sha2_256_out.txt, are all one really needs to try out
+this program!)
+
+---
+
+Long Version
+
+Note: in order to help detect possible data corruption, here is the SHA2-512 value of the 'problem256x2-68.bin' data file
+supplied by the author that is intended to be used (there is another file with the same name in the 'old/' folder, and
+that one can be safely deleted):
+
+bc9b04b27664a11f5907aef2238d81bf944382ae20a1ec3c4ae3d9f8965ac36ed97cfd31ca8099db01d30f82ce063675ee85c03f88aea27479a2fbf466f6e3f0
+
+file size: 3032179754 Bytes
+
+Second tracking number (this is a SHA2-256 value; see compute1.cpp for meaning):
+
+253736f3ba044d4373df1aa89022762663a47cae6577aefd35f3926973572302
+
+Contact: Willow Schlanger; P.O. BOX 2268; Nevada City, CA 95959
+
+E-mail: willow@undocumented.info
+
+Note that the author reserves the right to discard unsolicited or unexpected mail or e-mail, but you are
+encouraged to participate in any newsgroup discussions the author is occasionally involved in.
+
+---
+
+Please see below for build steps.
+
+The only truly required step, is step 4. That step lets you run the program called 'compute1', which uses
+the data file 'sha2_256_out.txt', which is a matrix of 33-bit unsigned integer coefficients, expressed in
+base 16, in a fully linear (but iterative, instead of all-at-once) way to achieve the same effects as
+applying the SHA2-256 algorithm.
+
+Steps 1 through 3 will allow you to boostrap your system, and are optional unless you want to produce all
+the data files (incuding sha2_256_out.txt) yourself, from the suppplied C++ procedural code. This will be
+instructive to better understand how Convergent Linear Analysis works.
+
+It is intended that a brief article called "On the Linearization of Cryptosystems with Applications in
+Algorithm Archiving" by the author will discuss this. It is hoped (but not promised!) that such an article
+will appear on ArXiV very soon (search for the author's last name).
+
+Note: Step 4 is optional, but might be instructive to the advanced user.
+
+---
+
+Build steps.
+
+1. g++ -I./h -std=c++11 -o generate008.out generate008.cpp formcrypto.cpp formsha256.cpp -lgmp -lgmpxx -O2
+   To produce the 'problem256x2-68.bin' and 'solution256x2-68.bin' files, first delete any previously existing
+   versions of those files; execute the above command (the multiprecision library called GMP is
+   required; on Debian, one can install via: sudo apt-get install libgmp-dev libgmpxx4ldbl -- might already
+   be installed if you use Slackware); finally,
+   execute ./generate008.out. Note that this process requires about 3 GB of RAM and takes many, many hours.
+   The progress indicator is quadratic, which means if it looks like it's counting up to N, then sqrt(N)
+   is the half-way mark; thus, if 25,000 is the upper-limit then 5,000 or so is really the half-way point.
+   The process can be sped up considerably with a small code change (this is left as an exercise to the
+   reader). Note that ./old also contains a version of the two binary files in question. A 64-bit
+   system is highly recommended due to the memory requirement for this step.
+   
+   The author recommends first-time users execute the g++ command shown above, but then don't actually
+   run ./generate008.out (just make sure it builds successfully), if you already have in the current
+   directory, the versions of the problem256x2-68.bin and solution256x2-68.bin files that the author
+   has supplied. If, at some point, you'd like to produce your own binary files, then set aside several
+   hours -- it could be even half a day to a day and a half, depending on your system's performance.
+   
+   You can then proceed to the next step.
+
+2. g++ -I./h -std=c++11 -o convert.out convert.cpp formproblem.cpp -lgmp -lgmpxx -O2
+   ./convert.out
+   
+   The above steps produce the 'problem.dat' file from the 'problem256x2-68.bin' and 'solution256x2-68.bin'
+   files.
+   
+   Although an author-supplied version of problem.dat might be available in the current working directory,
+   this step is recommended as it's a good exercise to do at least once. It must be done after a newly created
+   version of the 'problem256x2-68.bin' and 'solution256x2-68.bin' files have been produced, but can also be
+   done in a new installation, using author-supplied binary files, to ensure a new problem.dat is created,
+   which will then be in sync with the binary files in question.
+
+3. g++ -I./h -std=c++11 -o check2.out check2.cpp -O2
+   ./check2.out
+
+   This reads 'problem.dat', and produces the 'sha2_256_out.txt' file.
+
+4. g++ -o compute1.out compute1.cpp
+   ./compute1.out
+
+   This is the only truly required step, for demonstration purposes.
+   
+   It uses the 'sha2_256_out.txt' file, which includes a matrix of coefficients, i.e. 33-bit unsigned integer
+   values in matrix form, in a fully linear but iterative (instead of all-at-once) way to perform a sample
+   SHA2-256 computation. The user is to supply the input to SHA2-256 by modifying the 'get_input()' function.
+   
+   The fully linear compuation, then, demonstrates that SHA2-256 has been successfully linearized in full. This
+   does not affect the cryptographic strength of SHA2-256, i.e. there are no known cryptanalysis applications,
+   but there are applications with algorithm archiving: one can 'cite' a table of numbers, and supply simple
+   instructions on how to use them, as the reference implementation for an algorithm like SHA2-256, instead of
+   supplying pseudo-code. It is intended that people in the future will then be able to understand such an
+   algorithm description better than pseudo-code that could become obsolete in the distant future; plus, it will
+   be easier to 'cite' a table of numbers, i.e. a matrix of coefficients, as a reference implementation if
+   everyone can agree on it. There are many different ways to write pseudo-code and, sadly, such code cannot be
+   executed or directly tested.
+
+5. Please see old/ for some old code for reference purposes that ight be instructive.
+   Two old binary files are also in this location (they can safely be deleted).
+
